@@ -47,10 +47,12 @@ Death, How Much Death: Two Years of Demographic Collapse in Gaza". *Perspectives
 Two "war years" (7 Oct 2023 - 6 Oct 2025) are compared with a no-conflict counterfactual. The code reproduces:
 
 - **Figure 1**: contribution of each age and sex group to the relative mortality increase from the conflict,
-  with the 12.7x (first war year) and 7.4x (second war year) mortality multipliers.
+  with the 12.7x (first war year) and 7.4x (second war year) mortality multipliers, and the 57% (first year) and
+  42% (second year) of the increase borne by children, women and older adults.
 - **Figure 2**: life expectancy at birth (e0) in each war year against the no-conflict counterfactual, by sex,
   and the resulting loss (Total: 29.5 and 40.4 years against 76.7 and 76.8 expected).
-- **Total conflict deaths** over the two war years: about 115,700 (95% interval 103,900-128,600).
+- **Conflict deaths** over the two war years: about 115,700 (95% interval 104,200-128,700).
+- **Years of life lost**: 54 years per death for women and 49 for men, at mean ages at death of 26 and 28.
 
 The 10.6% population decline quoted in the text comes from PCBS (2025) and is not computed here.
 
@@ -62,27 +64,25 @@ Open `gaza_e0_loss_2023_2025.Rproj` and run
 source("run_all.R")
 ```
 
-It takes 1-2 minutes. Developed with R 4.6.1 (tidyverse 2.0.0, ungroup 1.4.4, rstan 2.32.7, readxl 1.5.0);
-missing CRAN packages are installed by `code/00_setup.R`. The last step (`07_check_against_paper.R`) stops
-with an error if the e0 values or the conflict-death totals differ from the published ones. No random numbers
-are drawn after the posterior samples, so results are the same on every run.
+It takes 1-2 minutes. Developed with R 4.6.1 (tidyverse 2.0.0, ungroup 1.4.4, rstan 2.32.7, scales 1.4.0);
+missing CRAN packages are installed by `code/00_setup.R`. The last step (`06_check_against_paper.R`) stops
+with an error if any of the numbers listed above differs from the published ones. No random numbers are drawn
+after the posterior samples, so results are the same on every run.
 
 ## Pipeline
 
 | Step | Script | Reads | Writes |
 |---|---|---|---|
-| setup | `code/00_setup.R` | | packages, life-table helpers, Stan-CSV extractors |
+| setup | `code/00_setup.R` | | packages, life-table function, posterior-draw extractor |
 | 1 | `01_adjust_exposures_war_years.R` | Guillot/PCBS exposures, baseline forecasts, posterior samples, combatant deaths | `data_inter/adjusted_exposures.rds` |
 | 2 | `02_extract_conflict_deaths.R` | posterior samples, combatant deaths | `data_inter/conflict_deaths_samples_sex_age_2waryears.rds` |
-| 3 | `03_btselem_gaza_prewar_deaths.R` | B'Tselem xlsx | `data_inter/btselem_gaza_2000-2023_age_sex.rds` |
-| 4 | `04_mort_rates_e0_yll.R` | steps 1-2, baseline forecasts | `data_inter/ests_persp_demograficas2.rds` (e0) |
-| 5 | `05_pscore_decomposition.R` | steps 1-3, baseline forecasts | `data_inter/ests_persp_demograficas.rds` (relative mortality increase) |
-| 6 | `06_paper_figures.R` | steps 4-5 | `figures/persp_dem/` |
-| 7 | `07_check_against_paper.R` | steps 2 and 4 | checks only |
+| 3 | `03_e0_loss_pyll.R` | steps 1-2, baseline forecasts | `data_inter/ests_persp_demograficas2.rds` (e0), `output/conflict_deaths_summary.csv`, `output/pyll_summary.csv` |
+| 4 | `04_relative_mortality_increase.R` | steps 1-2, baseline forecasts | `data_inter/ests_persp_demograficas.rds` (relative mortality increase) |
+| 5 | `05_paper_figures.R` | steps 3-4 | `figures/persp_dem/` |
+| 6 | `06_check_against_paper.R` | steps 2-4 | checks only |
 
 `figures/persp_dem/01_psc_cnt*` is Figure 1 and `02_lss_horiz*` is Figure 2, in English, Spanish (`_esp`)
-and Catalan (`_cat`). Steps 4 and 5 also write exploratory figures to `figures/`, and step 5 copies some summary
-tables to the system clipboard (`copy_this()`).
+and Catalan (`_cat`).
 
 ## Input data (`data_input/`)
 
@@ -93,6 +93,6 @@ tables to the system clipboard (`copy_this()`).
 | `pi_x_moh_2024.rds` | Age grouping used when extracting the posterior draws |
 | `pcbs_exposures_gaza_guillot.rds` | Gaza population by sex and age (PCBS, Guillot adjustment) |
 | `data_plus_forecasts_v2.rds` | Lee-Carter baseline (no-conflict) mortality forecasts for Gaza |
-| `btselem_pse_killed_by_isr_{cvs,fcs,unk}.xlsx` | B'Tselem records of Palestinians killed by Israeli forces, used for the pre-war age and sex pattern of deaths |
 
-`data_inter/` holds the intermediate results written by the pipeline.
+`data_inter/` holds the intermediate results written by the pipeline and `output/` the summary tables
+(conflict deaths and years of life lost).
